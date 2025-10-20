@@ -14,10 +14,10 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
       <StatusBar style="auto" />
+      <Stack>
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'ChatBot' }} />
+      </Stack>
     </ThemeProvider>
   );
 }

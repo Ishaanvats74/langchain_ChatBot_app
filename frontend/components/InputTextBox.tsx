@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, TextInput,TextInputProps, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // install with: expo install @expo/vector-icons
+import { Ionicons } from '@expo/vector-icons'; 
 
 interface InputTextBoxProps extends Omit<TextInputProps, 'onChangeText' | 'value'> {
-  value: string; // explicitly type value
+  value: string; 
   onChangeText: (text: string) => void;
-  onSend: () => void; // for send button
+  onSend: () => void; 
   placeholder?: string;
 }
 

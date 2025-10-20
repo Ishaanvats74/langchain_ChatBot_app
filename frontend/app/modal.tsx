@@ -1,5 +1,5 @@
-import InputTextBox from '@/components/InputTextBox';
-import React, { useState } from 'react';
+import InputTextBox from "@/components/InputTextBox";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -7,61 +7,71 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  ListRenderItem
-} from 'react-native';
+  ListRenderItem,
+} from "react-native";
 
 interface Message {
   id: string;
   text: string;
-  sender: 'user' | 'bot';
+  sender: "user" | "bot";
   thinking?: boolean;
 }
 
 export default function HomeScreen() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: 'Hello! How can I help you?', sender: 'bot' },
+    { id: "1", text: "Hello! How can I help you?", sender: "bot" },
   ]);
-  const [inputText, setInputText] = useState<string>('');
+
+  const [inputText, setInputText] = useState<string>("");
+  const flatListRef = useRef<FlatList<Message>>(null);
+  
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   const handleSend = async () => {
-    if (inputText.trim() === '') return;
+    if (inputText.trim() === "") return;
 
-    // Add user message
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
-      { id: Date.now().toString(), text: inputText, sender: 'user' },
+      { id: Date.now().toString(), text: inputText, sender: "user" },
     ]);
 
-    setInputText('');
+    setInputText("");
 
-    // Add "Bot is thinking..." message
     const thinkingId = Date.now() + 1;
-    setMessages(prev => [
+    setMessages((prev) => [
       ...prev,
-      { id: thinkingId.toString(), text: 'Bot is thinking...', sender: 'bot', thinking: true },
+      {
+        id: thinkingId.toString(),
+        text: "Bot is thinking...",
+        sender: "bot",
+        thinking: true,
+      },
     ]);
 
     try {
-      const res = await fetch('http://192.168.1.10:3000/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("http://192.168.1.10:3000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: inputText }),
       });
       const data = await res.json();
 
-      // Replace the "thinking" message with actual response
-      setMessages(prev =>
-        prev.map(msg =>
+      setMessages((prev) =>
+        prev.map((msg) =>
           msg.id === thinkingId.toString()
             ? { ...msg, text: data.response, thinking: false }
             : msg
         )
       );
     } catch (error) {
-      setMessages(prev =>
-        prev.map(msg =>
+      setMessages((prev) =>
+        prev.map((msg) =>
           msg.id === thinkingId.toString()
-            ? { ...msg, text: 'Bot failed to respond 😢', thinking: false }
+            ? { ...msg, text: "Bot failed to respond 😢", thinking: false }
             : msg
         )
       );
@@ -73,13 +83,13 @@ export default function HomeScreen() {
     <View
       style={[
         styles.messageBubble,
-        item.sender === 'user' ? styles.userBubble : styles.botBubble,
+        item.sender === "user" ? styles.userBubble : styles.botBubble,
       ]}
     >
       <Text
         style={{
-          color: item.sender === 'user' ? '#fff' : '#000',
-          fontStyle: item.thinking ? 'italic' : 'normal',
+          color: item.sender === "user" ? "#fff" : "#000",
+          fontStyle: item.thinking ? "italic" : "normal",
         }}
       >
         {item.text}
@@ -90,12 +100,13 @@ export default function HomeScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={80}
     >
       <FlatList
+        ref={flatListRef}
         data={messages}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={renderMessage}
         contentContainerStyle={styles.messagesContainer}
       />
@@ -112,24 +123,24 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'flex-end',
+    backgroundColor: "#F5F5F5",
+    justifyContent: "flex-end",
   },
   messagesContainer: {
     padding: 10,
   },
   messageBubble: {
-    maxWidth: '80%',
+    maxWidth: "80%",
     padding: 10,
     borderRadius: 15,
     marginVertical: 4,
   },
   userBubble: {
-    backgroundColor: '#007AFF',
-    alignSelf: 'flex-end',
+    backgroundColor: "#007AFF",
+    alignSelf: "flex-end",
   },
   botBubble: {
-    backgroundColor: '#E5E5EA',
-    alignSelf: 'flex-start',
+    backgroundColor: "#E5E5EA",
+    alignSelf: "flex-start",
   },
 });
