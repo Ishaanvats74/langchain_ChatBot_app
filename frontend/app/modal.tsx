@@ -1,73 +1,90 @@
 import InputTextBox from '@/components/InputTextBox';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  ListRenderItem
+} from 'react-native';
+
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  thinking?: boolean;
+}
 
 export default function HomeScreen() {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     { id: '1', text: 'Hello! How can I help you?', sender: 'bot' },
   ]);
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState<string>('');
 
   const handleSend = async () => {
-  if (inputText.trim() === "") return;
+    if (inputText.trim() === '') return;
 
-  // Add user message
-  setMessages((prev) => [
-    ...prev,
-    { id: Date.now().toString(), text: inputText, sender: "user" },
-  ]);
+    // Add user message
+    setMessages(prev => [
+      ...prev,
+      { id: Date.now().toString(), text: inputText, sender: 'user' },
+    ]);
 
-  setInputText("");
+    setInputText('');
 
-  // Add "Bot is thinking..." message
-  const thinkingId = Date.now() + 1;
-  setMessages((prev) => [
-    ...prev,
-    { id: thinkingId.toString(), text: "Bot is thinking...", sender: "bot", thinking: true },
-  ]);
+    // Add "Bot is thinking..." message
+    const thinkingId = Date.now() + 1;
+    setMessages(prev => [
+      ...prev,
+      { id: thinkingId.toString(), text: 'Bot is thinking...', sender: 'bot', thinking: true },
+    ]);
 
-  try {
-    const res = await fetch("http://192.168.1.10:3000/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: inputText }),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch('http://192.168.1.10:3000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: inputText }),
+      });
+      const data = await res.json();
 
-    // Replace the "thinking" message with actual response
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === thinkingId.toString()
-          ? { ...msg, text: data.response, thinking: false }
-          : msg
-      )
-    );
-  } catch (error) {
-    // If API fails, update thinking message
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === thinkingId.toString()
-          ? { ...msg, text: "Bot failed to respond 😢", thinking: false }
-          : msg
-      )
-    );
-    console.error(error);
-  }
-};
+      // Replace the "thinking" message with actual response
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === thinkingId.toString()
+            ? { ...msg, text: data.response, thinking: false }
+            : msg
+        )
+      );
+    } catch (error) {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === thinkingId.toString()
+            ? { ...msg, text: 'Bot failed to respond 😢', thinking: false }
+            : msg
+        )
+      );
+      console.error(error);
+    }
+  };
 
-
-
-  const renderMessage = ({ item }) => (
+  const renderMessage: ListRenderItem<Message> = ({ item }) => (
     <View
-    style={[
-      styles.messageBubble,
-      item.sender === "user" ? styles.userBubble : styles.botBubble,
-    ]}
-  >
-    <Text style={{ color: item.sender === "user" ? "#fff" : "#000", fontStyle: item.thinking ? "italic" : "normal" }}>
-      {item.text}
-    </Text>
-  </View>
+      style={[
+        styles.messageBubble,
+        item.sender === 'user' ? styles.userBubble : styles.botBubble,
+      ]}
+    >
+      <Text
+        style={{
+          color: item.sender === 'user' ? '#fff' : '#000',
+          fontStyle: item.thinking ? 'italic' : 'normal',
+        }}
+      >
+        {item.text}
+      </Text>
+    </View>
   );
 
   return (
